@@ -1,7 +1,7 @@
 # Alunos: Julia Retore e Lucas Thomas
 import sys
 
-# leitura do arquivo no formato DIMACS CNF
+# Leitura do arquivo no formato DIMACS CNF
 def leitura_arquivo_cnf(nome_arquivo):
   clausulas = []
   with open(nome_arquivo, 'r') as arquivo:
@@ -17,29 +17,33 @@ def leitura_arquivo_cnf(nome_arquivo):
             clausulas.append(literais)
   return clausulas, int(num_literais), int(num_clausulas)
 
-def simplifica(F):
+# Simplifica o conjunto de cláusulas, por propagação unitária
+def simplifica_clausula_unitaria(F, valoracao):
     clausulas_unitarias = [clausula for clausula in F if len(clausula) == 1] 
     while clausulas_unitarias: 
         L = clausulas_unitarias[0][0]
         F = propagacao(F, L)
+        valoracao += [L]
         clausulas_unitarias = [clausula for clausula in F if len(clausula) == 1]
-    return F  
+    return F, valoracao 
 
+# Simplifica o conjunto de cláusulas, por propagação da valoração do átomo correspondente
 def propagacao(F, L):
     F = [clausula for clausula in F if L not in clausula]  # Remove as cláusulas que contêm L
     nova_F = []
     for clausula in F:
         if -L in clausula:  # Se ∼L estiver na cláusula, removemos ∼L
             nova_clausula = [x for x in clausula if x != -L]
-            if len(nova_clausula) == 0:  # Se a cláusula se tornar vazia
-                return -1  # A fórmula é insatisfatível (cláusula falsificada)
-            nova_F.append(nova_clausula)  # Adiciona a nova cláusula à fórmula
+            if len(nova_clausula) == 0:  
+                return -1  # A fórmula é insatisfatível (⊥)
+            nova_F.append(nova_clausula) 
         else:
-            nova_F.append(clausula)  # Cláusula sem modificações
+            nova_F.append(clausula)
     return nova_F
 
-
+# Algoritmo de DPLL
 def dpll(F, valoracao):
+    F, valoracao = simplifica_clausula_unitaria(F, valoracao)
     if(F == -1): return [] 
     elif(len(F) == 0): return valoracao 
 
@@ -52,9 +56,9 @@ def dpll(F, valoracao):
             return nova_valoracao
     return []
 
+# Formata a saída esperada e salva no arquivo de resposta
 def escrever_saida(nome_arquivo_origem, valoracao):
     nome_arquivo_saida = nome_arquivo_origem.rsplit('.', 1)[0] + '.res'
-    
     with open(nome_arquivo_saida, 'w') as arquivo:
         if valoracao:
             arquivo.write("SAT\n")
@@ -63,8 +67,6 @@ def escrever_saida(nome_arquivo_origem, valoracao):
         else:
             arquivo.write("UNSAT\n")
 
-
-
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Uso: python seu_script.py nome_do_arquivo")
@@ -72,8 +74,8 @@ if __name__ == '__main__':
     nome_arquivo_origem = sys.argv[1]
 
     clausulas, num_literais, num_clausulas = leitura_arquivo_cnf(nome_arquivo_origem)
-    valoracao = dpll(simplifica(clausulas), [])
+    valoracao = dpll(clausulas, [])
+
     if(valoracao): valoracao.extend([i for i in range(1, num_literais + 1) if i not in valoracao and -i not in valoracao])
     escrever_saida(nome_arquivo_origem, valoracao)
 
-        
