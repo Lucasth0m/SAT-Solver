@@ -121,7 +121,7 @@ def remove_literais_puros(F, frequencia, valoracao):
 
 # Resolução de Literais Simples
 def resolucao_literais_simples(F, frequencia, valoracao):
-    literais_simples = [L for L, cont in frequencia.items() if cont == 1]
+    literais_simples = [L for L, cont in frequencia.items() if cont == 1 and -L not in frequencia ]
     for L in literais_simples:
         F = propagacao(F, L)  # Propagação para eliminar cláusulas que contêm o literal
         valoracao += [L]
@@ -148,13 +148,13 @@ def elimina_literais_opostos(F):
 def aplica_simplificacoes(F):
     frequencia = frequencia_literais(F)
     F = elimina_literais_opostos(F)
-    if F == -1: return []
+    if F == -1: return -1, []
     frequencia = frequencia_literais(F)
     F, valoracao = remove_literais_puros(F, frequencia, [])
-    if F == -1: return []
+    if F == -1: return -1, []
     frequencia = frequencia_literais(F)
     F, valoracao = resolucao_literais_simples(F, frequencia, valoracao)
-    if F == -1: return []
+    if F == -1: return -1, []
 
     return F, valoracao
 
