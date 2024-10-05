@@ -1,3 +1,6 @@
+# Alunos: Julia Retore e Lucas Thomas
+import sys
+
 # leitura do arquivo no formato DIMACS CNF
 def leitura_arquivo_cnf(nome_arquivo):
   clausulas = []
@@ -5,7 +8,7 @@ def leitura_arquivo_cnf(nome_arquivo):
     for linha in arquivo:
         # preâmbulo
         if linha.startswith('c'): continue # ignorar comentários
-        if linha.startswith('p'): # precisa ????????
+        if linha.startswith('p'):
             _, _, num_literais, num_clausulas = linha.split()
         # cláusulas
         else:
@@ -13,7 +16,6 @@ def leitura_arquivo_cnf(nome_arquivo):
             literais = literais[:-1] #retira o 0 do final;
             clausulas.append(literais)
   return clausulas, int(num_literais), int(num_clausulas)
-
 
 def simplifica(F):
     clausulas_unitarias = [clausula for clausula in F if len(clausula) == 1] 
@@ -50,15 +52,28 @@ def dpll(F, valoracao):
             return nova_valoracao
     return []
 
+def escrever_saida(nome_arquivo_origem, valoracao):
+    nome_arquivo_saida = nome_arquivo_origem.rsplit('.', 1)[0] + '.res'
+    
+    with open(nome_arquivo_saida, 'w') as arquivo:
+        if valoracao:
+            arquivo.write("SAT\n")
+            valoracao_str = ' '.join(map(str, valoracao)) + ' 0\n'
+            arquivo.write(valoracao_str)
+        else:
+            arquivo.write("UNSAT\n")
+
+
 
 if __name__ == '__main__':
-    clausulas, num_literais, num_clausulas = leitura_arquivo_cnf('teste.txt')
-    F = simplifica(clausulas) 
-    valoracao = dpll(clausulas, [])
-    if(valoracao): 
-        print('SAT')
-        print(*valoracao, sep=" ", end=" ")
-        print("0")
-    else: 
-        print('UNSAT')
+    if len(sys.argv) != 2:
+        print("Uso: python seu_script.py nome_do_arquivo")
+        sys.exit(1)
+    nome_arquivo_origem = sys.argv[1]
+
+    clausulas, num_literais, num_clausulas = leitura_arquivo_cnf(nome_arquivo_origem)
+    valoracao = dpll(simplifica(clausulas), [])
+    if(valoracao): valoracao.extend([i for i in range(1, num_literais + 1) if i not in valoracao and -i not in valoracao])
+    escrever_saida(nome_arquivo_origem, valoracao)
+
         
