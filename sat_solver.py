@@ -33,9 +33,9 @@ def simplifica_clausula_unitaria(F, valoracao):
 
 # Simplifica o conjunto de cláusulas, por propagação da valoração do átomo correspondente
 def propagacao(F, L):
-    F = [clausula for clausula in F if L not in clausula]  # Remove as cláusulas que contêm L
     nova_F = []
     for clausula in F:
+        if  L in clausula: continue
         if -L in clausula:  # Se ∼L estiver na cláusula, removemos ∼L
             nova_clausula = [x for x in clausula if x != -L]
             if len(nova_clausula) == 0:  
@@ -67,11 +67,11 @@ def Heuristica_MOM(F):
 
 # Algoritmo de DPLL
 def dpll(F, valoracao):
-    F, valoracao = simplifica_clausula_unitaria(F, valoracao)
+    # F, valoracao = simplifica_clausula_unitaria(F, valoracao)
     if(F == -1): return [] 
-    elif(len(F) == 0): return valoracao 
+    if(len(F) == 0): return valoracao 
 
-    # Seleção sequencial do literal:
+    # Seleção do literal de forma sequencial:
     # for L in range(1, num_literais + 1):
     #     if L not in valoracao and -L not in valoracao:            
     #         nova_valoracao = dpll(propagacao(F, L), valoracao + [L])
@@ -80,15 +80,13 @@ def dpll(F, valoracao):
     #         if(nova_valoracao != -1): return nova_valoracao
 
 
-    # Seleção pela Heurística MOM do literal:
+    # Seleção do literal pela Heurística MOM:
     L = Heuristica_MOM(F)
 
     nova_valoracao = dpll(propagacao(F, L), valoracao + [L])
-    if(nova_valoracao == -1):
-        nova_valoracao = dpll(propagacao(F, -L), valoracao + [-L])
-    if(nova_valoracao != -1): return nova_valoracao
-    
-    return []
+    if not nova_valoracao:
+        nova_valoracao =  dpll(propagacao(F, -L), valoracao + [-L])
+    return nova_valoracao
 
 # Formata a saída esperada e salva no arquivo de resposta
 def escreve_saida(nome_arquivo_origem, valoracao):
@@ -97,6 +95,7 @@ def escreve_saida(nome_arquivo_origem, valoracao):
         if valoracao:
             arquivo.write("SAT\n")
             if(valoracao): valoracao.extend([i for i in range(1, num_literais + 1) if i not in valoracao and -i not in valoracao])
+            valoracao = sorted(valoracao, key=abs)
             valoracao_str = ' '.join(map(str, valoracao)) + ' 0\n'
             arquivo.write(valoracao_str)
         else:
