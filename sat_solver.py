@@ -67,9 +67,10 @@ def Heuristica_MOM(F):
 
 # Algoritmo de DPLL
 def dpll(F, valoracao):
-    # F, valoracao = simplifica_clausula_unitaria(F, valoracao)
+    if(F != -1): F, valoracao = simplifica_clausula_unitaria(F, valoracao)
     if(F == -1): return [] 
     if(len(F) == 0): return valoracao 
+    
 
     # Seleção do literal de forma sequencial:
     # for L in range(1, num_literais + 1):
@@ -101,6 +102,7 @@ def escreve_saida(nome_arquivo_origem, valoracao):
         else:
             arquivo.write("UNSAT\n")
 
+# Calcula a frequencia de cada literal em um conjunto de cláusulas
 def frequencia_literais(F):
     frequencia = {}
     for clausula in F:
@@ -109,15 +111,62 @@ def frequencia_literais(F):
             else: frequencia[literal] = 1
     return frequencia
 
+# Eliminação de literais puros
+def remove_literais_puros(F, frequencia, valoracao):
+    literais_puros = {L for L in frequencia if -L not in frequencia}
+    for L in literais_puros:
+        F = propagacao(F, L)  # Propagação para eliminar cláusulas
+        valoracao += [L]
+    return F, valoracao
+
+# Resolução de Literais Simples
+def resolucao_literais_simples(F, frequencia, valoracao):
+    literais_simples = [L for L, cont in frequencia.items() if cont == 1]
+    for L in literais_simples:
+        F = propagacao(F, L)  # Propagação para eliminar cláusulas que contêm o literal
+        valoracao += [L]
+    return F, valoracao
+
+# Eliminação de Literais Opostos
+def elimina_literais_opostos(F):
+    nova_F = []
+
+    for clausula in F:
+        literais_presentes = set()
+        tem_oposto = False
+        for literal in clausula:
+            if -literal in literais_presentes:
+                tem_oposto = True
+                break
+            literais_presentes.add(literal)
+        if not tem_oposto:
+            nova_F.append(clausula)  # Adiciona a cláusula se não contém literais opostos
+
+    return nova_F
+
+# Aplica simplificações
+def aplica_simplificacoes(F):
+    frequencia = frequencia_literais(F)
+    F = elimina_literais_opostos(F)
+    if F == -1: return []
+    frequencia = frequencia_literais(F)
+    F, valoracao = remove_literais_puros(F, frequencia, [])
+    if F == -1: return []
+    frequencia = frequencia_literais(F)
+    F, valoracao = resolucao_literais_simples(F, frequencia, valoracao)
+    if F == -1: return []
+
+    return F, valoracao
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Uso: python seu_script.py nome_do_arquivo")
         sys.exit(1)
     nome_arquivo_origem = sys.argv[1]
-
+    
     clausulas, num_literais, num_clausulas = leitura_arquivo_cnf(nome_arquivo_origem)
-    frequencia = frequencia_literais(clausulas)
-    valoracao = dpll(clausulas, [])
+    clausulas, valoracao = aplica_simplificacoes(clausulas)
+    valoracao = dpll(clausulas, valoracao)
     escreve_saida(nome_arquivo_origem, valoracao)
 
 
@@ -127,9 +176,9 @@ if __name__ == '__main__':
 
 #Simplificações: 
 # 1- Eliminação cláusulas duplicadas
-# -Eliminação de Literais Puros -> TO DO
-# -Resolução de literais simples -> TO DO
-# -Eliminação de literais opostos -> TO DO
+# 2- Eliminação de literais puros 
+# 3- Resolução de literais simples 
+# 4- Eliminação de literais opostos
 
 
 
