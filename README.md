@@ -26,11 +26,11 @@ Este projeto implementa um solver de SAT (Satisfatibilidade) utilizando o algori
 python sat_solver.py <arquivo_de_entrada.cnf>
 ```
 
-O solver exibirá o resultado no terminal:
+O solver exibirá o resultado da seguinte forma:
 - **SAT**: Se a fórmula for satisfatível, e exibirá uma atribuição válida de valores de verdade aos literais.
 - **UNSAT**: Se a fórmula for insatisfatível.
 
-O programa também irá gerar um arquivo de saída com o mesmo nome do arquivo de entrada, mas com a extensão `.res`.
+O programa irá gerar um arquivo de saída com o mesmo nome do arquivo de entrada, mas com a extensão `.res`.
 
 ### Exemplo de Execução
 
